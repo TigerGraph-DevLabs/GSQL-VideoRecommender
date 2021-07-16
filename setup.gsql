@@ -1,0 +1,55 @@
+CREATE VERTEX user (
+    PRIMARY_ID username STRING,
+    username STRING,
+    communityID INT,
+    country STRING
+)
+
+CREATE VERTEX video (
+    PRIMARY_ID videoID INT,
+    country STRING
+)
+
+CREATE VERTEX tag (
+    PRIMARY_ID content STRING,
+    content STRING
+)
+
+CREATE VERTEX audio (
+    PRIMARY_ID content INT,
+    content INT
+)
+
+CREATE DIRECTED EDGE following (FROM user, TO user)
+    WITH REVERSE_EDGE="reverse_following"
+
+CREATE UNDIRECTED EDGE watched (FROM user, TO video, percentWatched INT, commented BOOL, liked BOOL)
+
+CREATE UNDIRECTED EDGE vTag (FROM video, TO tag)
+CREATE UNDIRECTED EDGE vAudio (FROM video, TO audio)
+
+CREATE GRAPH tiktok (*)
+USE GRAPH tiktok
+
+CREATE LOADING JOB load_tt FOR GRAPH tiktok {
+    DEFINE FILENAME file0="~/tigergraph/0.csv";
+    DEFINE FILENAME file1="~/tigergraph/1.csv";
+    DEFINE FILENAME file2="~/tigergraph/2.csv";
+    DEFINE FILENAME file3="~/tigergraph/3.csv";
+    DEFINE FILENAME file4="~/tigergraph/4.csv";
+    
+    LOAD file0 TO EDGE vTag VALUES ($0, $1) USING header="false", separator=",";
+    LOAD file0 TO VERTEX tag VALUES ($1, $1) USING header="false", separator=",";
+    
+    LOAD file1 TO EDGE vAudio VALUES ($0, $1) USING header="false", separator=",";
+    LOAD file1 TO VERTEX audio VALUES ($1, $1) USING header="false", separator=",";
+    LOAD file1 TO VERTEX video VALUES ($0, $2) USING header="false", separator=",";
+    
+    LOAD file2 TO EDGE watched VALUES ($0, $1, $2, $3, $4) USING header="true", separator=",";
+    LOAD file2 TO VERTEX user VALUES ($0, $0, _, _) USING header="true", separator=",";
+    
+    LOAD file3 TO EDGE following VALUES ($0, $1) USING header="false", separator=",";
+    
+    LOAD file4 TO VERTEX user VALUES ($0, _, _, $1) USING header="false", separator=",";
+}
+RUN LOADING JOB load_tt
